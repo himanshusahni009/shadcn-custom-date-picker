@@ -1,7 +1,9 @@
+// External Dependencies
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+// Internal Dependencies
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import {
@@ -22,13 +24,18 @@ interface CustomDatePickerPropsType {
   getFormattedSelectedDate?: any;
   isFormattedDateRequired?: boolean;
   isSelectedDateRequired: boolean;
+  isDateReset?: boolean;
+  datePickerTitle?: string;
+  selectedDefaultDate?: any;
 }
 
 interface DatePickerBasePropsType {
   date: Date | undefined;
+  setDate: any;
   handleDateSelect: any;
   fromDate: Date | undefined;
   toDate: Date | undefined;
+  selectedDefaultDate?: Date;
 }
 
 interface dateFormatObjectType {
@@ -55,6 +62,9 @@ export function CustomDatePicker({
   isFormattedDateObjectRequired = false,
   isFormattedDateRequired = false,
   isSelectedDateRequired = false,
+  isDateReset = false,
+  datePickerTitle = "Default Title",
+  selectedDefaultDate,
 }: CustomDatePickerPropsType) {
   const [date, setDate] = useState<Date>();
 
@@ -85,18 +95,26 @@ export function CustomDatePicker({
       getFormattedSelectedDate(() => formattedDate(selectedDate));
   }
 
+  /* UseEffect to Reset Date based on Parent Reset Button Call */
+  useEffect(() => {
+    isDateReset &&
+      setDate(selectedDefaultDate ? selectedDefaultDate : undefined);
+  }, [isDateReset === true]);
+
   // Component JSX Part
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" title={datePickerTitle}>
       {/* Custom Label Wrapper with Title */}
       {isLabelEnable && <CustomLabel>{labelTitle}</CustomLabel>}
 
       {/* Base Date Picker with Date selection functionality */}
       <DatePickerBase
         date={date}
+        setDate={setDate}
         handleDateSelect={handleDateSelect}
         fromDate={fromDate}
         toDate={toDate}
+        selectedDefaultDate={selectedDefaultDate}
       />
     </div>
   );
@@ -105,10 +123,18 @@ export function CustomDatePicker({
 /* Basic Date Picker Component with Date Selection Functionality */
 function DatePickerBase({
   date,
+  setDate,
   handleDateSelect,
   fromDate,
   toDate,
+  selectedDefaultDate,
 }: DatePickerBasePropsType) {
+  /* UseEffect for Default Selected Date from Parent */
+  useEffect(() => {
+    selectedDefaultDate && setDate(selectedDefaultDate);
+  }, []);
+
+  // Component JSX Part
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -135,6 +161,7 @@ function DatePickerBase({
           initialFocus
           fromDate={fromDate}
           toDate={toDate}
+          today={selectedDefaultDate}
         />
       </PopoverContent>
     </Popover>
@@ -160,3 +187,46 @@ export function CustomLabel({
     </label>
   );
 }
+
+/* Examples Usage
+
+  Basic Date Picker --->>
+
+  <CustomDatePicker
+    isSelectedDateRequired={false}
+    isFormattedDateObjectRequired
+    getFormattedSelectedDateObject={(selectedDate: any) =>
+      setDate(selectedDate)
+    }
+    isDateReset={date?.isDateReset}
+    datePickerTitle="Date"
+  />
+
+  Range (Start Date and End Date) Date Picker --->>
+  
+  <CustomDatePicker
+    isSelectedDateRequired={false}
+    isFormattedDateObjectRequired
+    getFormattedSelectedDateObject={(selectedDate: any) =>
+      setStartDate(selectedDate)
+    }
+    toDate={endDate?.selectedDate}
+    isDateReset={startDate?.isDateReset}
+    datePickerTitle="Start Date"
+    labelTitle="Start Date"
+  />
+
+  Date Picker with Default Date Selected
+
+  <CustomDatePicker
+    isSelectedDateRequired={false}
+    isFormattedDateObjectRequired
+    getFormattedSelectedDateObject={(selectedDate: any) =>
+      setDate(selectedDate)
+    }
+    isDateReset={date?.isDateReset}
+    datePickerTitle="Date"
+    selectedDefaultDate={defaultSelectedDate}
+  />
+
+*/

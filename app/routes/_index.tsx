@@ -1,8 +1,7 @@
 import type { MetaFunction } from "@remix-run/node";
-import { format } from "date-fns";
 import { useState } from "react";
-import { CustomCombobox } from "~/components/CustomCombobox";
 import { CustomDatePicker } from "~/components/CustomDatePicker";
+import { getNthDateFromToday } from "~/utils/dateHelperFunctions";
 
 export const meta: MetaFunction = () => {
   return [
@@ -11,24 +10,32 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+// Date Initial State Object
+const dateInitialState = {
+  selectedDate: undefined,
+  formattedSelectedDate: "",
+  isDateReset: false,
+};
+
 export default function Index() {
   // UseState Declarations
-  const [startDate, setStartDate] = useState({
-    selectedDate: undefined,
-    formattedSelectedDate: "",
-  });
-  const [endDate, setEndDate] = useState({
-    selectedDate: undefined,
-    formattedSelectedDate: "",
-  });
-  const [date, setDate] = useState("");
+  const [startDate, setStartDate] = useState(dateInitialState);
+  const [endDate, setEndDate] = useState(dateInitialState);
+  const [date, setDate] = useState(dateInitialState);
 
+  // Variables Declarations
+  const defaultSelectedDate = getNthDateFromToday(5, "");
+
+  // Function to Handle Reset Date Functionality
   function handleReset() {
-    setStartDate({
-      selectedDate: undefined,
-      formattedSelectedDate: "",
-    });
-    setEndDate({ selectedDate: undefined, formattedSelectedDate: "" });
+    // Reset Single Date Picker
+    setDate({ ...dateInitialState, isDateReset: true });
+
+    // Reset Start Date
+    setStartDate({ ...dateInitialState, isDateReset: true });
+
+    // Reset End Date
+    setEndDate({ ...dateInitialState, isDateReset: true });
   }
 
   console.log("date :>> ", date);
@@ -37,18 +44,24 @@ export default function Index() {
 
   return (
     <>
-      <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
+      <div className="flex justify-center">
         <h1>Welcome to Remix</h1>
       </div>
 
       {/* Date Picker with Single Date Selection */}
       <CustomDatePicker
-        isSelectedDateRequired
-        getSelectedDate={(selectedDate: any) => setDate(selectedDate)}
+        isSelectedDateRequired={false}
+        isFormattedDateObjectRequired
+        getFormattedSelectedDateObject={(selectedDate: any) =>
+          setDate(selectedDate)
+        }
+        isDateReset={date?.isDateReset}
+        datePickerTitle="Date"
       />
 
       {/* Date Picker with Range Picker Selection */}
       <div className="flex gap-x-3 p-2">
+        {/* Custom Date Picker for Start Date */}
         <CustomDatePicker
           isSelectedDateRequired={false}
           isFormattedDateObjectRequired
@@ -56,8 +69,12 @@ export default function Index() {
             setStartDate(selectedDate)
           }
           toDate={endDate?.selectedDate}
+          isDateReset={startDate?.isDateReset}
+          datePickerTitle="Start Date"
+          labelTitle="Start Date"
         />
 
+        {/* Custom Date Picker for End Date */}
         <CustomDatePicker
           isSelectedDateRequired={false}
           isFormattedDateObjectRequired
@@ -65,8 +82,26 @@ export default function Index() {
             setEndDate(selectedDate)
           }
           fromDate={startDate?.selectedDate}
+          isDateReset={endDate?.isDateReset}
+          datePickerTitle="End Date"
+          labelTitle="End Date"
         />
+      </div>
 
+      {/* Date Picker with Single Date Selection with Default Date Selected */}
+      <CustomDatePicker
+        isSelectedDateRequired={false}
+        isFormattedDateObjectRequired
+        getFormattedSelectedDateObject={(selectedDate: any) =>
+          setDate(selectedDate)
+        }
+        isDateReset={date?.isDateReset}
+        datePickerTitle="Date"
+        selectedDefaultDate={defaultSelectedDate}
+      />
+
+      <div className="flex items-center justify-center">
+        {/* Button for Reset Date */}
         <button type="button" onClick={handleReset}>
           Reset
         </button>
